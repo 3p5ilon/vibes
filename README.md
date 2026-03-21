@@ -4,7 +4,7 @@ A personal image moodboard — scattered images, organized by year.
 
 Inspired by [Guzey](https://guzey.com/vibes/) and [Sophia](https://girl.surgery/website_vibes/). Based on the approach from [sophiawisdom's gist](https://gist.github.com/sophiawisdom/c1b16fcaca017d1aec2358c6fb619697).
 
-## structure
+## Structure
 
 ```
 vibes/
@@ -17,7 +17,7 @@ vibes/
 
 `lister.py` scans all `YYYY/` folders, URL-encodes filenames, and writes `images.json`. `index.html` reads it on load and renders the scattered layout client-side. adding a new year (e.g. `2027/`) automatically makes it the default.
 
-## setup
+## Setup
 
 ```bash
 python3 -m venv venv
@@ -26,23 +26,18 @@ pip install pillow pillow-heif
 deactivate
 ```
 
-## add images & generate
+## Adding images
 
 drop images into the correct year folder, then regenerate `images.json`:
 
 ```bash
 source venv/bin/activate
-python3 lister.py
+python3 lister.py  # regenerates images.json
 deactivate
+
+python3 -m http.server 8000  # preview at localhost:8000
 ```
 
-preview locally before pushing:
-
-```bash
-python3 -m http.server 8000
-# open http://localhost:8000
-```
-
-## license
+## License
 
 MIT
