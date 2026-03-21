@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>2026 vibes</title>
+<title>vibes</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📷</text></svg>">
 </head>
 <style>
@@ -13,7 +13,6 @@
     --link: #3d3d3a;
     --link-hover: #a8a49c;
     --border: rgba(255,255,255,0.07);
-    --fname-bg: rgba(20,20,18,0.70);
     --lb-bg: rgba(10,10,9,0.94);
     --lb-name: #555;
   }
@@ -24,7 +23,6 @@
       --link: #bbb;
       --link-hover: #444;
       --border: rgba(0,0,0,0.09);
-      --fname-bg: rgba(250,249,246,0.80);
       --lb-bg: rgba(235,233,228,0.96);
       --lb-name: #aaa;
     }
@@ -100,10 +98,10 @@
 
 <div id="header">
   <div id="left">
-    <h1>2026 vibes</h1>
-    <div id="nav"><a href="2025/">2025</a> <a href="2024/">2024</a></div>
+    <h1 id="title"></h1>
+    <div id="nav"></div>
   </div>
-  <div id="count">11 images</div>
+  <div id="count"></div>
 </div>
 
 <div id="container"></div>
@@ -118,7 +116,10 @@ const C   = document.getElementById('container');
 const lb  = document.getElementById('lb');
 const lbi = document.getElementById('lb-img');
 const lbn = document.getElementById('lb-n');
+
 let imgs = [], idx = 0;
+let allImages = [], allYears = [];
+let currentInterval = null;
 
 const openLb  = i => { idx=i; lbi.src=imgs[i].s; lbn.textContent=imgs[i].l; lb.classList.add('open') };
 const closeLb = ()  => lb.classList.remove('open');
@@ -131,6 +132,7 @@ document.addEventListener('keydown', e => {
 });
 
 function shuffle(a) {
+  a = [...a];
   for (let i=a.length-1; i>0; i--) {
     const j = Math.floor(Math.random()*(i+1));
     [a[i],a[j]] = [a[j],a[i]];
@@ -138,64 +140,99 @@ function shuffle(a) {
   return a;
 }
 
-const PREFIX = '';  // "" for root, "../" for year subpages
+function getYear() {
+  const h = location.hash.slice(1);
+  return allYears.includes(h) ? h : allYears[0];
+}
 
-fetch("images.json")
-  .then(r => r.json())
-  .then(all => {
-    // filter this year's images, prepend prefix so paths are relative to this page
-    const kv = shuffle(
-      all
-        .filter(([p]) => p.startsWith('2026/'))
-        .map(([p, dims]) => [PREFIX + p, dims])
-    );
-    const sw = C.getBoundingClientRect().width;
+function renderYear(year) {
+  if (currentInterval) clearInterval(currentInterval);
+  C.innerHTML = '';
+  imgs = [];
 
-    const pairs = kv.map(([k,[w,h]]) => {
-      const r = (w*h)/(500*300);
-      return [
-        Math.min(parseInt(r>16 ? w/8 : r>4 ? w/4 : w/2), sw-10),
-        parseInt(r>16 ? h/8 : r>4 ? h/4 : h/2)
-      ];
-    });
+  const yearImgs = allImages.filter(([p]) => p.startsWith(year + '/'));
 
-    let pos=[], i=0;
+  document.getElementById('title').textContent = year + ' vibes';
+  document.title = year + ' vibes';
+  document.getElementById('count').textContent = yearImgs.length + ' images';
+  document.getElementById('nav').innerHTML = allYears
+    .filter(y => y !== year)
+    .map(y => y === allYears[0] ? `<a href="./">${y}</a>` : `<a href="#${y}">${y}</a>`)
+    .join(' ');
 
-    const iv = setInterval(() => {
-      let H=600;
-      const [w,h] = pairs[i];
+  // clean URL: no hash for newest year, #year for older ones
+  const newUrl = year === allYears[0] ? location.pathname : location.pathname + '#' + year;
+  history.replaceState(null, '', newUrl);
 
-      outer: while (true) {
-        for (let _=0; _<50; _++) {
-          const al=Math.random()*(sw-w), at=Math.random()*(H-h);
-          let hit=false;
-          for (let j=0; j<pos.length; j++) {
-            const [bl,bt]=pos[j];
-            if (al<bl+pairs[j][0] && al+w>bl && at<bt+pairs[j][1] && at+h>bt) { hit=true; break }
+  const kv = shuffle(yearImgs);
+  const sw = C.getBoundingClientRect().width;
+
+  const pairs = kv.map(([, [w, h]]) => {
+    const r = (w*h) / (500*300);
+    return [
+      Math.min(parseInt(r>16 ? w/8 : r>4 ? w/4 : w/2), sw-10),
+      parseInt(r>16 ? h/8 : r>4 ? h/4 : h/2)
+    ];
+  });
+
+  let pos = [], i = 0;
+
+  currentInterval = setInterval(() => {
+    if (i >= kv.length) { clearInterval(currentInterval); return; }
+
+    let H = 600;
+    const [w, h] = pairs[i];
+
+    outer: while (true) {
+      for (let _ = 0; _ < 50; _++) {
+        const al = Math.random() * (sw - w);
+        const at = Math.random() * (H - h);
+        let hit = false;
+        for (let j = 0; j < pos.length; j++) {
+          const [bl, bt] = pos[j];
+          if (al < bl+pairs[j][0] && al+w > bl && at < bt+pairs[j][1] && at+h > bt) {
+            hit = true; break;
           }
-          if (!hit) { pos.push([parseInt(al),parseInt(at)]); break outer }
         }
-        H += 50;
+        if (!hit) { pos.push([parseInt(al), parseInt(at)]); break outer; }
       }
+      H += 50;
+    }
 
-      const fp=kv[i][0], label=fp.split('/').pop(), ii=imgs.length;
-      imgs.push({s:fp, l:label});
+    const fp    = kv[i][0];
+    const label = decodeURIComponent(fp.split('/').pop());
+    const ii    = imgs.length;
+    imgs.push({ s: fp, l: label });
 
-      const wrap = document.createElement('div');
-      wrap.className = 'w';
-      wrap.style.cssText = `top:${pos[i][1]}px;left:${pos[i][0]}px;width:${pairs[i][0]}px;height:${pairs[i][1]}px`;
-      wrap.onclick = () => openLb(ii);
+    const wrap = document.createElement('div');
+    wrap.className = 'w';
+    wrap.style.cssText = `top:${pos[i][1]}px;left:${pos[i][0]}px;width:${pairs[i][0]}px;height:${pairs[i][1]}px`;
+    wrap.onclick = () => openLb(ii);
 
-      const img = document.createElement('img');
-      img.src=fp; img.loading='lazy';
-      img.style.cssText = `width:${pairs[i][0]}px;height:${pairs[i][1]}px`;
+    const img = document.createElement('img');
+    img.src = fp;
+    img.loading = 'lazy';
+    img.style.cssText = `width:${pairs[i][0]}px;height:${pairs[i][1]}px`;
 
-      const n = document.createElement('div');
-      n.className='n'; n.textContent=label;
+    const n = document.createElement('div');
+    n.className = 'n';
+    n.textContent = label;
 
-      wrap.appendChild(img); wrap.appendChild(n); C.appendChild(wrap);
-      i++; if (i===kv.length) clearInterval(iv);
-    }, 100);
+    wrap.appendChild(img);
+    wrap.appendChild(n);
+    C.appendChild(wrap);
+    i++;
+  }, 100);
+}
+
+window.addEventListener('hashchange', () => renderYear(getYear()));
+
+fetch('images.json')
+  .then(r => r.json())
+  .then(({ years, images }) => {
+    allYears  = years;
+    allImages = images;
+    renderYear(getYear());
   });
 </script>
 </html>
