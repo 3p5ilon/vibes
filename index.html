@@ -66,6 +66,14 @@
     white-space: nowrap;
   }
 
+  @media (max-width: 600px) {
+    #header { flex-direction: column; gap: .6rem }
+    #left { flex-direction: column; gap: .4rem }
+    #nav { gap: .6rem }
+    #nav a, #count { font-size: 16px }
+    h1 { font-size: 22px }
+  }
+
   #container { position: relative; width: 100%; min-height: 100vh }
 
   .w {
@@ -130,6 +138,16 @@ document.addEventListener('keydown', e => {
   if (e.key === 'ArrowRight') { idx=(idx+1)%imgs.length; lbi.src=imgs[idx].s; lbn.textContent=imgs[idx].l }
   if (e.key === 'ArrowLeft')  { idx=(idx-1+imgs.length)%imgs.length; lbi.src=imgs[idx].s; lbn.textContent=imgs[idx].l }
 });
+
+// swipe left/right to navigate in lightbox
+let touchX = 0;
+lb.addEventListener('touchstart', e => { touchX = e.touches[0].clientX }, { passive: true });
+lb.addEventListener('touchend', e => {
+  const diff = touchX - e.changedTouches[0].clientX;
+  if (Math.abs(diff) < 50) return;  // ignore small swipes
+  if (diff > 0) { idx=(idx+1)%imgs.length; lbi.src=imgs[idx].s; lbn.textContent=imgs[idx].l }
+  else          { idx=(idx-1+imgs.length)%imgs.length; lbi.src=imgs[idx].s; lbn.textContent=imgs[idx].l }
+}, { passive: true });
 
 function shuffle(a) {
   a = [...a];
