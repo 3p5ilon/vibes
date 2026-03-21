@@ -4,27 +4,31 @@ A personal image moodboard — scattered images, organized by year.
 
 Inspired by [Guzey](https://guzey.com/vibes/) and [Sophia](https://girl.surgery/website_vibes/). Based on the approach from [sophiawisdom's gist](https://gist.github.com/sophiawisdom/c1b16fcaca017d1aec2358c6fb619697).
 
+## structure
+
+```
+vibes/
+├── index.html       — home page
+├── lister.py        — run whenever you add images
+├── images.json      — auto-generated, do not edit
+├── 2025/            — images go directly in year folders
+└── 2024/
+```
+
+`lister.py` scans all `YYYY/` folders, URL-encodes filenames, and writes `images.json`. `index.html` reads it on load and renders the scattered layout client-side. adding a new year (e.g. `2027/`) automatically makes it the default.
+
 ## setup
 
 ```bash
 python3 -m venv venv
 source venv/bin/activate
 pip install pillow pillow-heif
+deactivate
 ```
-
-## structure
-
-```
-vibes/
-├── 2026/       ← current year images go here
-├── 2025/       ← older year
-├── lister.py
-└── venv/
-```
-
-A new year folder (e.g. `2027/`) is automatically picked up as the new current year next time you run `lister.py`. No manual changes needed.
 
 ## add images & generate
+
+drop images into the correct year folder, then regenerate `images.json`:
 
 ```bash
 source venv/bin/activate
@@ -32,33 +36,11 @@ python3 lister.py
 deactivate
 ```
 
-## preview
+preview locally before pushing:
 
 ```bash
 python3 -m http.server 8000
 # open http://localhost:8000
-```
-
-## deploy to github pages
-
-```bash
-git init
-echo "venv/" >> .gitignore
-git add .
-git commit -m "init"
-git remote add origin https://github.com/YOUR_USERNAME/vibes.git
-git push -u origin main
-```
-
-Then go to repo → **Settings → Pages** → Source: `main` / `root` → Save.
-
-Live at `https://YOUR_USERNAME.github.io/vibes/` in a minute.
-
-To update after adding new images:
-
-```bash
-source venv/bin/activate && python3 lister.py && deactivate
-git add . && git commit -m "add images" && git push
 ```
 
 ## license
