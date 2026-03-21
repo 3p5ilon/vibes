@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html>
+<head>
 <title>2025 vibes</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📷</text></svg>">
+</head>
 <style>
   * { margin:0; padding:0; box-sizing:border-box }
 
@@ -58,7 +61,6 @@
   }
   #nav a:hover { color: var(--link-hover) }
 
-  /* same style/color as the year links */
   #count {
     font: italic normal 14px/1 Georgia, serif;
     color: var(--link);
@@ -79,12 +81,10 @@
   .w .n {
     display: none; position: absolute;
     bottom: 0; left: 0; right: 0;
-    background: var(--fname-bg);
-    color: var(--text);
+    background: rgba(0,0,0,.82); color: #f0f0f0;
     font: 10px/1.4 monospace; padding: 4px 6px;
     white-space: nowrap; overflow: hidden;
     text-overflow: ellipsis; pointer-events: none;
-    backdrop-filter: blur(4px);
   }
   .w:hover .n { display: block }
 
@@ -101,9 +101,9 @@
 <div id="header">
   <div id="left">
     <h1>2025 vibes</h1>
-    <div id="nav"><a href="../">2026</a> <a href="../2024/">2024</a></div>
+    <div id="nav"><a href="../../">2026</a> <a href="../2024/">2024</a></div>
   </div>
-  <div id="count">101 images</div>
+  <div id="count">102 images</div>
 </div>
 
 <div id="container"></div>
@@ -138,10 +138,17 @@ function shuffle(a) {
   return a;
 }
 
+const PREFIX = '../';  // "" for root, "../" for year subpages
+
 fetch("../images.json")
   .then(r => r.json())
   .then(all => {
-    const kv = shuffle(all.filter(([p]) => p.startsWith('/2025/')));
+    // filter this year's images, prepend prefix so paths are relative to this page
+    const kv = shuffle(
+      all
+        .filter(([p]) => p.startsWith('2025/'))
+        .map(([p, dims]) => [PREFIX + p, dims])
+    );
     const sw = C.getBoundingClientRect().width;
 
     const pairs = kv.map(([k,[w,h]]) => {

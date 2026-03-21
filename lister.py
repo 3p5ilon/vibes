@@ -4,7 +4,6 @@ import os
 try:
     from PIL import Image
     from pillow_heif import register_heif_opener
-
     register_heif_opener()
 except ImportError:
     print("Run: pip install pillow pillow-heif")
@@ -19,7 +18,9 @@ for entry in os.scandir("."):
     for file in sorted(os.listdir(year)):
         try:
             im = Image.open(f"{year}/{file}")
-            images.append([f"/{year}/{file}", [im.width, im.height]])
+            # store as "YEAR/file.jpg" — no leading slash
+            # root page uses this as-is, year pages prepend "../"
+            images.append([f"{year}/{file}", [im.width, im.height]])
         except:
             continue  # skip .DS_Store, non-images
     if images:
@@ -32,28 +33,30 @@ if not data:
 
 years = sorted(data.keys(), reverse=True)
 
-# one flat JSON — each page filters by year prefix client-side
+# one flat JSON — each page fetches this and filters by year
 json.dump([img for y in years for img in data[y]], open("images.json", "w"))
 
 
 def year_href(current_year, y):
     if current_year == years[0]:
-        return f"{y}/"
-    else:
-        return "../" if y == years[0] else f"../{y}/"
+        return f"{y}/"          # root → 2025/
+    return f"../../" if y == years[0] else f"../{y}/"  # year page → back to root or sibling
 
 
-def make_page(current_year, json_path):
+def make_page(current_year, json_path, img_prefix):
+    # img_prefix: "" for root page, "../" for year subpages
     nav_links = " ".join(
         f'<a href="{year_href(current_year, y)}">{y}</a>'
-        for y in years
-        if y != current_year
+        for y in years if y != current_year
     )
     img_count = len(data[current_year])
 
     return f"""<!DOCTYPE html>
 <html>
+<head>
 <title>{current_year} vibes</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📷</text></svg>">
+</head>
 <style>
   * {{ margin:0; padding:0; box-sizing:border-box }}
 
@@ -111,7 +114,6 @@ def make_page(current_year, json_path):
   }}
   #nav a:hover {{ color: var(--link-hover) }}
 
-  /* same style/color as the year links */
   #count {{
     font: italic normal 14px/1 Georgia, serif;
     color: var(--link);
@@ -132,12 +134,10 @@ def make_page(current_year, json_path):
   .w .n {{
     display: none; position: absolute;
     bottom: 0; left: 0; right: 0;
-    background: var(--fname-bg);
-    color: var(--text);
+    background: rgba(0,0,0,.82); color: #f0f0f0;
     font: 10px/1.4 monospace; padding: 4px 6px;
     white-space: nowrap; overflow: hidden;
     text-overflow: ellipsis; pointer-events: none;
-    backdrop-filter: blur(4px);
   }}
   .w:hover .n {{ display: block }}
 
@@ -191,10 +191,17 @@ function shuffle(a) {{
   return a;
 }}
 
+const PREFIX = '{img_prefix}';  // "" for root, "../" for year subpages
+
 fetch("{json_path}")
   .then(r => r.json())
   .then(all => {{
-    const kv = shuffle(all.filter(([p]) => p.startsWith('/{current_year}/')));
+    // filter this year's images, prepend prefix so paths are relative to this page
+    const kv = shuffle(
+      all
+        .filter(([p]) => p.startsWith('{current_year}/'))
+        .map(([p, dims]) => [PREFIX + p, dims])
+    );
     const sw = C.getBoundingClientRect().width;
 
     const pairs = kv.map(([k,[w,h]]) => {{
@@ -247,14 +254,14 @@ fetch("{json_path}")
 </html>"""
 
 
-# root index.html = newest year
-open("index.html", "w").write(make_page(years[0], "images.json"))
+# root index.html — images are at "2026/file.jpg" relative to root
+open("index.html", "w").write(make_page(years[0], "images.json", img_prefix=""))
 print(f"\nGenerated → index.html ({years[0]} vibes)")
 
-# YEAR/index.html for each older year
+# YEAR/index.html — images are at "../2025/file.jpg" relative to the year subfolder
 for year in years[1:]:
     os.makedirs(year, exist_ok=True)
-    open(f"{year}/index.html", "w").write(make_page(year, "../images.json"))
+    open(f"{year}/index.html", "w").write(make_page(year, "../images.json", img_prefix="../"))
     print(f"Generated → {year}/index.html")
 
 print("\nDone. Run: python3 -m http.server 8000")
