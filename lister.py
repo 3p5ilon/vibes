@@ -40,7 +40,7 @@ json.dump([img for y in years for img in data[y]], open("images.json", "w"))
 def year_href(current_year, y):
     if current_year == years[0]:
         return f"{y}/"          # root → 2025/
-    return f"../../" if y == years[0] else f"../{y}/"  # year page → back to root or sibling
+    return f"../" if y == years[0] else f"../{y}/"  # year page → back to root or sibling
 
 
 def make_page(current_year, json_path, img_prefix):
