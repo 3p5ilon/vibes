@@ -19,6 +19,8 @@ vibes/
 
 ## Setup
 
+requires python 3!
+
 ```bash
 python3 -m venv venv
 source venv/bin/activate
@@ -26,7 +28,7 @@ pip install pillow pillow-heif
 deactivate
 ```
 
-## Adding images
+### Adding images
 
 drop images into the correct year folder, then regenerate `images.json`:
 
