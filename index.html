@@ -41,6 +41,7 @@
       min-height: 100vh;
     }
 
+    /* desktop: [2026 vibes  2025  2024] ......... [11 images] */
     #header {
       padding: 1.6rem 2rem 1.4rem;
       display: flex;
@@ -95,24 +96,28 @@
       white-space: nowrap;
     }
 
+    /* mobile: */
     @media (max-width: 600px) {
       #header {
-        flex-direction: column;
-        gap: 0.6rem;
-      }
-      #left {
+        padding: 1rem 1rem 0.8rem;
         flex-direction: column;
         gap: 0.4rem;
       }
-      #nav {
-        gap: 0.6rem;
+      #left {
+        flex-direction: column;
+        gap: 0.3rem;
       }
-      #nav a,
+      #nav {
+        gap: 0.8rem;
+      }
       #count {
         font-size: 14px;
       }
       h1 {
         font-size: 18px;
+      }
+      #nav a {
+        font-size: 14px;
       }
     }
 
@@ -184,6 +189,7 @@
     }
   </style>
 
+  <!-- original HTML structure unchanged -->
   <div id="header">
     <div id="left">
       <h1 id="title"></h1>
@@ -239,7 +245,6 @@
       }
     });
 
-    // swipe left/right to navigate in lightbox
     let touchX = 0;
     lb.addEventListener(
       "touchstart",
@@ -252,7 +257,7 @@
       "touchend",
       (e) => {
         const diff = touchX - e.changedTouches[0].clientX;
-        if (Math.abs(diff) < 50) return; // ignore small swipes
+        if (Math.abs(diff) < 50) return;
         if (diff > 0) {
           idx = (idx + 1) % imgs.length;
           lbi.src = imgs[idx].s;
@@ -300,7 +305,6 @@
         )
         .join(" ");
 
-      // clean URL: no hash for newest year, #year for older ones
       const newUrl =
         year === allYears[0]
           ? location.pathname
@@ -332,8 +336,8 @@
 
         outer: while (true) {
           for (let _ = 0; _ < 50; _++) {
-            const al = Math.random() * (sw - w);
-            const at = Math.random() * (H - h);
+            const al = Math.random() * (sw - w),
+              at = Math.random() * (H - h);
             let hit = false;
             for (let j = 0; j < pos.length; j++) {
               const [bl, bt] = pos[j];
@@ -355,9 +359,9 @@
           H += 50;
         }
 
-        const fp = kv[i][0];
-        const label = decodeURIComponent(fp.split("/").pop());
-        const ii = imgs.length;
+        const fp = kv[i][0],
+          label = decodeURIComponent(fp.split("/").pop()),
+          ii = imgs.length;
         imgs.push({ s: fp, l: label });
 
         const wrap = document.createElement("div");
